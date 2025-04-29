@@ -23,19 +23,19 @@ type DataObj = {
   description: string;
 };
 
-type Props<S> = {
+type Props<T> = {
   fieldTitle: string;
-  nameInSchema: keyof S & string;
+  nameInSchema: keyof T & string;
   data: DataObj[];
   className?: string;
 };
 
-export function SelectWithLabel<S>({
+export function SelectWithLabel<T>({
   fieldTitle,
   nameInSchema,
   data,
   className,
-}: Props<S>) {
+}: Props<T>) {
   const form = useFormContext();
 
   return (

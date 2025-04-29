@@ -13,11 +13,23 @@ import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { TextareaWithLabel } from "@/components/inputs/TextareaWithLabel";
 
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { CheckBoxWithLabel } from "@/components/inputs/CheckBoxWithLabel";
+
 type Props = {
   customer?: selectCustomerSchemaType;
 };
 
 export default function CustomerForm({ customer }: Props) {
+  const { getPermission, isLoading } = useKindeBrowserClient();
+
+  const isManager = !isLoading && getPermission("manager")?.isGranted;
+
+  // const permObj = getPermissions();
+  // const isAuthorized =
+  //   !isLoading &&
+  //   permObj.permissions.some((p) => p === "manager" || p === "admin");
+
   const defaultValues: insertCustomerSchemaType = {
     id: customer?.id ?? 0,
     firstName: customer?.firstName ?? "",
@@ -29,6 +41,7 @@ export default function CustomerForm({ customer }: Props) {
     city: customer?.city ?? "",
     zip: customer?.zip ?? "",
     notes: customer?.notes ?? "",
+    active: customer?.active ?? true,
   };
 
   const form = useForm<insertCustomerSchemaType>({
@@ -44,7 +57,8 @@ export default function CustomerForm({ customer }: Props) {
     <div className="flex flex-col gap-1 sm:px-8">
       <div>
         <h2 className="text-2xl font-bold">
-          {customer?.id ? "Edit" : "New"} Customer Form
+          {customer?.id ? "Edit" : "New"} Customer
+          {customer?.id ? `#${customer?.id}` : "Form"}
         </h2>
       </div>
       <Form {...form}>
@@ -99,6 +113,16 @@ export default function CustomerForm({ customer }: Props) {
               nameInSchema="notes"
               className="h-30 resize-none"
             />
+
+            {isLoading ? (
+              <p>Loading...</p>
+            ) : isManager ? (
+              <CheckBoxWithLabel<insertCustomerSchemaType>
+                fieldTitle="Active"
+                nameInSchema="active"
+                message="Yes"
+              />
+            ) : null}
 
             <div className="flex gap-4 mt-8">
               <Button
