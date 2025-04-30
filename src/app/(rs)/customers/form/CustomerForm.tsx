@@ -90,6 +90,18 @@ export default function CustomerForm({ customer }: Props) {
               fieldTitle="City"
               nameInSchema="city"
             />
+
+            {isLoading ? (
+              <p>Loading...</p>
+            ) : isManager ? (
+              <div className="mt-4">
+                <CheckBoxWithLabel<insertCustomerSchemaType>
+                  fieldTitle="Active"
+                  nameInSchema="active"
+                  message="Yes"
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-4 w-full max-w-xs">
@@ -113,16 +125,6 @@ export default function CustomerForm({ customer }: Props) {
               nameInSchema="notes"
               className="h-30 resize-none"
             />
-
-            {isLoading ? (
-              <p>Loading...</p>
-            ) : isManager ? (
-              <CheckBoxWithLabel<insertCustomerSchemaType>
-                fieldTitle="Active"
-                nameInSchema="active"
-                message="Yes"
-              />
-            ) : null}
 
             <div className="flex gap-4 mt-8">
               <Button
