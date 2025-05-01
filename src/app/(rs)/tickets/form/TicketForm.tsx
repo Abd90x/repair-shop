@@ -15,6 +15,11 @@ import { TextareaWithLabel } from "@/components/inputs/TextareaWithLabel";
 import { Button } from "@/components/ui/button";
 import { CheckBoxWithLabel } from "@/components/inputs/CheckBoxWithLabel";
 import { SelectWithLabel } from "@/components/inputs/SelectWithLabel";
+import { saveTicketAction } from "@/app/actions/saveTicketAction";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
+import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
+import { LoaderCircle } from "lucide-react";
 
 type Props = {
   customer: selectCustomerSchemaType;
@@ -34,6 +39,24 @@ export default function TicketForm({
 }: Props) {
   const isManager = Array.isArray(techs);
 
+  const {
+    execute: excuteSave,
+    result: saveResult,
+    isPending: isSaving,
+    reset: resetSaveAction,
+  } = useAction(saveTicketAction, {
+    onSuccess({ data }) {
+      toast("Success 🎉", {
+        description: data?.message,
+      });
+    },
+    onError() {
+      toast.error("Error", {
+        description: "Save Failed",
+      });
+    },
+  });
+
   const defaultValues: insertTicketSchemaType = {
     id: ticket?.id ?? "(New)",
     customerId: ticket?.customerId ?? customer.id,
@@ -50,10 +73,12 @@ export default function TicketForm({
   });
 
   async function submitForm(data: insertTicketSchemaType) {
-    console.log(data);
+    excuteSave(data);
   }
   return (
     <div className="flex flex-col gap-1 sm:px-8">
+      <DisplayServerActionResponse result={saveResult} />
+
       <div>
         <h2 className="text-2xl font-bold">
           {ticket?.id && isEditable
@@ -136,7 +161,9 @@ export default function TicketForm({
                   className="w-3/4"
                   variant="default"
                   title="Save"
+                  disabled={isSaving}
                 >
+                  {isSaving && <LoaderCircle className="animate-spin" />}
                   Save
                 </Button>
 
@@ -144,7 +171,10 @@ export default function TicketForm({
                   type="button"
                   variant="destructive"
                   title="Reset"
-                  onClick={() => form.reset(defaultValues)}
+                  onClick={() => {
+                    form.reset(defaultValues);
+                    resetSaveAction();
+                  }}
                 >
                   Reset
                 </Button>

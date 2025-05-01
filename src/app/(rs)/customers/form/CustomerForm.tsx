@@ -16,6 +16,13 @@ import { TextareaWithLabel } from "@/components/inputs/TextareaWithLabel";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { CheckBoxWithLabel } from "@/components/inputs/CheckBoxWithLabel";
 
+import { useAction } from "next-safe-action/hooks";
+
+import { saveCustomerAction } from "@/app/actions/saveCustomerAction";
+import { toast } from "sonner";
+
+import { LoaderCircle } from "lucide-react";
+import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
 type Props = {
   customer?: selectCustomerSchemaType;
 };
@@ -50,11 +57,31 @@ export default function CustomerForm({ customer }: Props) {
     defaultValues,
   });
 
+  const {
+    execute: excuteSave,
+    result: saveResult,
+    isPending: isSaving,
+    reset: resetSaveAction,
+  } = useAction(saveCustomerAction, {
+    onSuccess({ data }) {
+      toast("Success 🎉", {
+        description: data?.message,
+      });
+    },
+    onError() {
+      toast.error("Error", {
+        description: "Save Failed",
+      });
+    },
+  });
+
   async function submitForm(data: insertCustomerSchemaType) {
-    console.log(data);
+    excuteSave(data);
   }
   return (
     <div className="flex flex-col gap-1 sm:px-8">
+      <DisplayServerActionResponse result={saveResult} />
+
       <div>
         <h2 className="text-2xl font-bold">
           {customer?.id ? "Edit" : "New"} Customer
@@ -93,7 +120,7 @@ export default function CustomerForm({ customer }: Props) {
 
             {isLoading ? (
               <p>Loading...</p>
-            ) : isManager ? (
+            ) : isManager && customer?.id ? (
               <div className="mt-4">
                 <CheckBoxWithLabel<insertCustomerSchemaType>
                   fieldTitle="Active"
@@ -129,10 +156,12 @@ export default function CustomerForm({ customer }: Props) {
             <div className="flex gap-4 mt-8">
               <Button
                 type="submit"
-                className="w-3/4"
+                className="w-3/4 gap-2"
                 variant="default"
                 title="Save"
+                disabled={isSaving}
               >
+                {isSaving && <LoaderCircle className="animate-spin" />}
                 Save
               </Button>
 
@@ -140,7 +169,10 @@ export default function CustomerForm({ customer }: Props) {
                 type="button"
                 variant="destructive"
                 title="Reset"
-                onClick={() => form.reset(defaultValues)}
+                onClick={() => {
+                  form.reset(defaultValues);
+                  resetSaveAction();
+                }}
               >
                 Reset
               </Button>
