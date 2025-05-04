@@ -6,6 +6,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  CellContext,
 } from "@tanstack/react-table";
 
 import {
@@ -17,15 +18,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useRouter } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { Button } from "@/components/ui/button";
+
+import { MoreHorizontal, UserCog } from "lucide-react";
+
+import Link from "next/link";
 
 type Props = {
   data: selectCustomerSchemaType[];
 };
 
 export default function CustomerTable({ data }: Props) {
-  const router = useRouter();
-
   const columnHeadersArray: Array<keyof selectCustomerSchemaType> = [
     "firstName",
     "lastName",
@@ -37,12 +49,58 @@ export default function CustomerTable({ data }: Props) {
 
   const columnHelper = createColumnHelper<selectCustomerSchemaType>();
 
-  const columns = columnHeadersArray.map((columnName) => {
-    return columnHelper.accessor(columnName, {
-      id: columnName,
-      header: columnName[0].toUpperCase() + columnName.slice(1),
-    });
-  });
+  const ActionsCell = ({
+    row,
+  }: CellContext<selectCustomerSchemaType, unknown>) => {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="w-8 h-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>
+            <Link
+              href={`/tickets/form?customerId=${row.original.id}`}
+              className="w-full"
+              prefetch={false}
+            >
+              New Ticket
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link
+              href={`/customers/form?customerId=${row.original.id}`}
+              className="w-full"
+              prefetch={false}
+            >
+              Edit Customer
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
+  ActionsCell.displayName = "ActionCell";
+
+  const columns = [
+    columnHelper.display({
+      id: "actions",
+      header: () => <UserCog />,
+      cell: ActionsCell,
+    }),
+    ...columnHeadersArray.map((columnName) => {
+      return columnHelper.accessor(columnName, {
+        id: columnName,
+        header: columnName[0].toUpperCase() + columnName.slice(1),
+      });
+    }),
+  ];
 
   const table = useReactTable({
     data,
@@ -57,8 +115,19 @@ export default function CustomerTable({ data }: Props) {
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="bg-secondary">
-                  <div>
+                <TableHead
+                  key={header.id}
+                  className={`bg-secondary ${
+                    header.id === "actions" ? "w-12" : ""
+                  }`}
+                >
+                  <div
+                    className={`${
+                      header.id === "actions"
+                        ? "flex justify-center items-center"
+                        : ""
+                    }`}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -76,9 +145,6 @@ export default function CustomerTable({ data }: Props) {
             <TableRow
               key={row.id}
               className="cursor-pointer hover:bg-border/25 dark:hover:bg-ring/40"
-              onClick={() =>
-                router.push(`/customers/form?customerId=${row.original.id}`)
-              }
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id} className="border">
