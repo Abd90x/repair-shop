@@ -13,7 +13,6 @@ import { InputWithLabel } from "@/components/inputs/InputWithLabel";
 import { Button } from "@/components/ui/button";
 import { TextareaWithLabel } from "@/components/inputs/TextareaWithLabel";
 
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { CheckBoxWithLabel } from "@/components/inputs/CheckBoxWithLabel";
 
 import { useAction } from "next-safe-action/hooks";
@@ -25,18 +24,10 @@ import { LoaderCircle } from "lucide-react";
 import { DisplayServerActionResponse } from "@/components/DisplayServerActionResponse";
 type Props = {
   customer?: selectCustomerSchemaType;
+  isManager?: boolean | undefined;
 };
 
-export default function CustomerForm({ customer }: Props) {
-  const { getPermission, isLoading } = useKindeBrowserClient();
-
-  const isManager = !isLoading && getPermission("manager")?.isGranted;
-
-  // const permObj = getPermissions();
-  // const isAuthorized =
-  //   !isLoading &&
-  //   permObj.permissions.some((p) => p === "manager" || p === "admin");
-
+export default function CustomerForm({ customer, isManager = false }: Props) {
   const defaultValues: insertCustomerSchemaType = {
     id: customer?.id ?? 0,
     firstName: customer?.firstName ?? "",
@@ -118,9 +109,7 @@ export default function CustomerForm({ customer }: Props) {
               nameInSchema="city"
             />
 
-            {isLoading ? (
-              <p>Loading...</p>
-            ) : isManager && customer?.id ? (
+            {isManager && customer?.id ? (
               <div className="mt-4">
                 <CheckBoxWithLabel<insertCustomerSchemaType>
                   fieldTitle="Active"
