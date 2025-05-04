@@ -1,10 +1,11 @@
 import { db } from "@/db";
 import { tickets, customers } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 
 export async function getOpenTickets() {
   const results = await db
     .select({
+      id: tickets.id,
       ticketDate: tickets.createdAt,
       title: tickets.title,
       firstName: customers.firstName,
@@ -13,10 +14,11 @@ export async function getOpenTickets() {
       phone: customers.phone,
       description: tickets.description,
       tech: tickets.tech,
+      completed: tickets.completed,
     })
     .from(tickets)
     .leftJoin(customers, eq(tickets.customerId, customers.id))
-    .where(eq(tickets.completed, false));
-
+    .where(eq(tickets.completed, false))
+    .orderBy(asc(tickets.createdAt));
   return results;
 }
