@@ -1,6 +1,7 @@
 import { createSafeActionClient } from "next-safe-action";
 import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
+import type { NeonDbError } from "@neondatabase/serverless";
 
 export const actionClient = createSafeActionClient({
   defineMetadataSchema() {
@@ -10,6 +11,15 @@ export const actionClient = createSafeActionClient({
   },
   handleServerError(error, utils) {
     const { clientInput, metadata } = utils;
+
+    if (error.constructor.name === "NeonDbError") {
+      const { code, detail } = error as NeonDbError;
+
+      if (code === "23505") {
+        return `Duplicated entry ${detail}`;
+      }
+    }
+
     Sentry.captureException(error, (scope) => {
       scope.clear();
       scope.setContext("serverError", {
